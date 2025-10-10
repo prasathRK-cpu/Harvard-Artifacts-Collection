@@ -47,7 +47,7 @@
         artifact_colors    → Color composition details linked via objectid.
 
  Author          : Prasath RK
- Version         : 0.0.2
+ Version         : 0.0.4
  Release Date    : 10-10-2025
  Dependencies    : streamlit, requests, sqlite3, pandas
  Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
@@ -61,7 +61,7 @@ import sqlite3
 import pandas as pd
 
 # Sidebar version info 
-st.sidebar.write("Version: 0.0.3") 
+st.sidebar.write("Version: 0.0.4") 
 st.sidebar.write("Release Date: 10-10-2025")
 
 #TITLE
@@ -216,56 +216,73 @@ if st.sidebar.button("**Collect Data**"):
 
     st.success(f"Data collection completed! Total records fetched: {len(all_records)}")
 
+import streamlit as st
 
+st.set_page_config(page_title="Harvard Artifacts ETL", layout="wide")
+
+# --- Sidebar Section: Buttons only ---
 with st.sidebar:
-    # Create two columns for buttons
-    col1, col2 ,col3 = st.columns(3)
-
+    st.header("🧭 Actions")
+    col1, col2, col3 = st.columns(3)
     with col1:
-        json_btn = st.button("json")
+        json_btn = st.button("JSON")
     with col2:
         df_btn = st.button("DataFrame")
     with col3:
-        ins_btn =st.button("Insert into DB")
-    
+        ins_btn = st.button("Insert into DB")
 
+# --- Main Page Section: Display area ---
+st.title("🎨 Harvard Artifacts Explorer")
 
-    if json_btn:
-        if ("json_metadata" in st.session_state and
-            "json_media" in st.session_state and
-            "json_colors" in st.session_state):
+if json_btn:
+    if (
+        "json_metadata" in st.session_state and
+        "json_media" in st.session_state and
+        "json_colors" in st.session_state
+    ):
+        jsonmetadata = st.session_state["json_metadata"]
+        jsonmedia = st.session_state["json_media"]
+        jsoncolors = st.session_state["json_colors"]
 
-            jsonmetadata = st.session_state["json_metadata"]
-            jsonmedia = st.session_state["json_media"]
-            jsoncolors = st.session_state["json_colors"]
+        st.markdown("## 📦 JSON Data Preview")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.subheader("Metadata JSON")
+            st.json(jsonmetadata)
+        with col2:
+            st.subheader("Media JSON")
+            st.json(jsonmedia)
+        with col3:
+            st.subheader("Colors JSON")
+            st.json(jsoncolors)
+    else:
+        st.warning("⚠️ JSON data not found in session state. Please load data first.")
 
-            # Display in main area using columns
-            main_col1, main_col2, main_col3 = st.columns(3)
-            with main_col1:
-                st.subheader("Metadata JSON")
-                st.json(jsonmetadata)
-            with main_col2:
-                st.subheader("Media JSON")
-                st.json(jsonmedia)
-            with main_col3:
-                st.subheader("Colors JSON")
-                st.json(jsoncolors)
+elif df_btn:
+    if (
+        "df_metadata" in st.session_state and
+        "df_media" in st.session_state and
+        "df_colors" in st.session_state
+    ):
+        df_metadata = st.session_state["df_metadata"]
+        df_media = st.session_state["df_media"]
+        df_colors = st.session_state["df_colors"]
 
-    if df_btn:
-        if ("df_metadata" in st.session_state and
-            "df_media" in st.session_state and
-            "df_colors" in st.session_state):
+        st.markdown("## 🧾 DataFrames Overview")
 
-            df_metadata = st.session_state["df_metadata"]
-            df_media = st.session_state["df_media"]
-            df_colors = st.session_state["df_colors"]
+        st.markdown("### 🟩 Metadata Table")
+        st.dataframe(df_metadata, use_container_width=True)
 
-            st.markdown("### <span style='color:green'>Metadata Table</span>", unsafe_allow_html=True)
-            st.dataframe(df_metadata)
-            st.markdown("### <span style='color:green'>Media Table</span>", unsafe_allow_html=True)
-            st.dataframe(df_media)
-            st.markdown("### <span style='color:green'>Colors Table</span>", unsafe_allow_html=True)
-            st.dataframe(df_colors)
+        st.markdown("### 🟦 Media Table")
+        st.dataframe(df_media, use_container_width=True)
+
+        st.markdown("### 🟨 Colors Table")
+        st.dataframe(df_colors, use_container_width=True)
+    else:
+        st.warning("⚠️ DataFrames not found in session state. Please load data first.")
+
+elif ins_btn:
+    st.info("💾 Insert to Database feature coming soon!")
 
 
  
