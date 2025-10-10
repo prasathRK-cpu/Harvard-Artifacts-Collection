@@ -61,7 +61,7 @@ import sqlite3
 import pandas as pd
 
 # Sidebar version info 
-st.sidebar.write("Version: 0.0.2") 
+st.sidebar.write("Version: 0.0.3") 
 st.sidebar.write("Release Date: 10-10-2025")
 
 #TITLE
@@ -72,13 +72,12 @@ Welcome to the **Harvard Artifacts Explorer**!
 Fetch, visualize, and store artifact metadata like a pro.  
 🎨 See colors, 🖼️ view media, and 📊 analyze trends in your browser.
 """)
-
 st.markdown("---")
-
 
 # ===========================
 # Database Metrics Section
 # ===========================
+
 conn = sqlite3.connect("harvard_db.sqlite3")
 cursor = conn.cursor()
 
@@ -113,10 +112,16 @@ st.divider()
 apikey = 'baeae4fa-903c-4cbe-bc8c-16369ea17a35'
 url = 'https://api.harvardartmuseums.org/object'
 size = '100'
-min_page=st.sidebar.number_input("start page", min_value=1, value=1, step=1)
-max_pages=st.sidebar.number_input("End page", min_value=1, value=1, step=1) 
-#classification = st.sidebar.text_input("Choose Classification")
-classification =st.sidebar.selectbox("Choose Classification", ["Coins","Paintings","Sculptures","Furniture","Drawings",
+
+with st.sidebar:
+    col1, col2,col3 = st.columns(3)
+with col1: 
+    min_page=st.number_input("start page", min_value=1, value=1, step=1)
+with col2:
+    max_pages=st.number_input("End page", min_value=1, value=1, step=1) 
+with col3:
+    #classification = st.sidebar.text_input("Choose Classification")
+    classification =st.selectbox("Choose Classification", ["Coins","Paintings","Sculptures","Furniture","Drawings",
                                                                 "Accessories","Prints","Vessels","Textile Arts",
                                                                 "Archival Material","Fragments","Manuscripts","Seals",
                                                                 "Straus Materials","All"])
@@ -211,34 +216,56 @@ if st.sidebar.button("**Collect Data**"):
 
     st.success(f"Data collection completed! Total records fetched: {len(all_records)}")
 
-if st.sidebar.button("JSON"):
-    if "json_metadata" in st.session_state and "json_media" in st.session_state and "json_colors" in st.session_state:
-        jsonmetadata=st.session_state["json_metadata"]
-        jsonmedia=st.session_state["json_media"]
-        jsoncolors=st.session_state["json_colors"]
 
-        col1,col2,col3=st.columns(3)
-        with col1:
-            st.subheader("Metadata JSON")
-            st.json(jsonmetadata)
-        with col2:
-            st.subheader("Media JSON")
-            st.json(jsonmedia)
-        with col3:
-            st.subheader("Colors JSON")
-            st.json(jsoncolors)
+with st.sidebar:
+    # Create two columns for buttons
+    col1, col2 ,col3 = st.columns(3)
 
-if st.sidebar.button("DataFram"):
-    if "df_metadata" in st.session_state and "df_media" in st.session_state and "df_colors" in st.session_state:
-        df_metadata = st.session_state["df_metadata"]
-        df_media = st.session_state["df_media"]
-        df_colors = st.session_state["df_colors"]
-        st.markdown("### <span style='color:green'>Metadata Table</span>", unsafe_allow_html=True)
-        st.dataframe(df_metadata)
-        st.markdown("### <span style='color:green'>Media Table</span>", unsafe_allow_html=True)
-        st.dataframe(df_media)
-        st.markdown("### <span style='color:green'>Colors Table</span>", unsafe_allow_html=True)
-        st.dataframe(df_colors)  
+    with col1:
+        json_btn = st.button("json")
+    with col2:
+        df_btn = st.button("DataFrame")
+    with col3:
+        ins_btn =st.button("Insert into DB")
+    
+
+
+    if json_btn:
+        if ("json_metadata" in st.session_state and
+            "json_media" in st.session_state and
+            "json_colors" in st.session_state):
+
+            jsonmetadata = st.session_state["json_metadata"]
+            jsonmedia = st.session_state["json_media"]
+            jsoncolors = st.session_state["json_colors"]
+
+            # Display in main area using columns
+            main_col1, main_col2, main_col3 = st.columns(3)
+            with main_col1:
+                st.subheader("Metadata JSON")
+                st.json(jsonmetadata)
+            with main_col2:
+                st.subheader("Media JSON")
+                st.json(jsonmedia)
+            with main_col3:
+                st.subheader("Colors JSON")
+                st.json(jsoncolors)
+
+    if df_btn:
+        if ("df_metadata" in st.session_state and
+            "df_media" in st.session_state and
+            "df_colors" in st.session_state):
+
+            df_metadata = st.session_state["df_metadata"]
+            df_media = st.session_state["df_media"]
+            df_colors = st.session_state["df_colors"]
+
+            st.markdown("### <span style='color:green'>Metadata Table</span>", unsafe_allow_html=True)
+            st.dataframe(df_metadata)
+            st.markdown("### <span style='color:green'>Media Table</span>", unsafe_allow_html=True)
+            st.dataframe(df_media)
+            st.markdown("### <span style='color:green'>Colors Table</span>", unsafe_allow_html=True)
+            st.dataframe(df_colors)
 
 
  
@@ -248,7 +275,7 @@ if st.sidebar.button("DataFram"):
 # Insert into SQL(SQLite3)
 # ==============================
 
-if st.sidebar.button("Insert into DB"):   #By clicking this button Data will insert to to corresponding tables
+if ins_btn:   #By clicking this button Data will insert to to corresponding tables
     if "df_metadata" in st.session_state and "df_media" in st.session_state and "df_colors" in st.session_state:
         df_metadata = st.session_state["df_metadata"]
         df_media = st.session_state["df_media"]
@@ -316,7 +343,7 @@ if st.sidebar.button("Insert into DB"):   #By clicking this button Data will ins
 # Genrating Report from SQL DB
 # ==============================
 
-with st.sidebar.expander("Reports"):
+with st.sidebar.markdown("Reports"):
     main_report = st.selectbox(
     "Select Main Report",
     [
@@ -545,6 +572,71 @@ ORDER BY artifact_count DESC"""
         st.subheader("Artifacts per Classification and Media Overview")
         st.datafram(df)
     conn.close()
+
+
+# Sidebar: Select report
+chart = st.sidebar.selectbox(
+    "Choose a chart_report",
+    ["", "Century Wise collection chart","Calssifcation Chart","Calssifcation vs Color Chart"]
+)
+
+# Button to display the report
+if st.sidebar.button("Display"):
+
+    # Connect to SQLite database
+    conn = sqlite3.connect("harvard_db.sqlite3")
+
+    # Run query based on selection
+    if chart == "Century Wise collection chart":
+        # Query: count of artifacts per century
+        query = "SELECT century, COUNT(*) as total FROM artifact_metadata GROUP BY century"
+        df = pd.read_sql_query(query, conn)
+
+        # Create bar chart using century as index
+        st.bar_chart(df.set_index('century')['total'])
+
+        # Optional: display query and dataframe
+        st.markdown("### SQL Query:")
+        st.code(query)
+        st.markdown("### Data Table:")
+        st.dataframe(df)
+
+    if chart == "Calssifcation Chart":
+        # Query: count of artifacts per century
+        query = "SELECT count(classification) as Total_count ,classification FROM artifact_metadata group by classification "
+        df = pd.read_sql_query(query, conn)
+        
+        # Create bar chart using century as index
+        st.bar_chart(df.set_index('classification')['Total_count'])
+        
+        # Optional: display query and dataframe
+        st.markdown("### SQL Query:")
+        st.code(query)
+        st.markdown("### Data Table:")
+        st.dataframe(df)
+        
+
+    if chart == "Calssifcation vs Color Chart":
+        # Query: count of artifacts per calssification
+        query = """SELECT m.classification, ROUND(AVG(c.percent),2) AS avg_color_coverage
+        FROM artifact_metadata m
+        JOIN artifact_colors c ON m.id = c.objectid
+        GROUP BY m.classification
+        ORDER BY avg_color_coverage DESC;"""
+        df = pd.read_sql_query(query, conn)
+
+        # Create bar chart using classification as index
+        st.bar_chart(df.set_index('classification')['avg_color_coverage'])
+
+
+        # Optional: display query and dataframe
+        st.markdown("### SQL Query:")
+        st.code(query)
+        st.markdown("### Data Table:")
+        st.dataframe(df)
+
+        # Close connection
+        conn.close()
 
 
 
