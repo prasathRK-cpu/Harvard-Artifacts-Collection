@@ -60,6 +60,10 @@ import requests
 import sqlite3
 import pandas as pd
 
+# Sidebar version info 
+st.sidebar.write("Version: 0.0.2") 
+st.sidebar.write("Release Date: 10-10-2025")
+
 #TITLE
 st.title("🏛️ Harvard Artifacts 🏛️")
 #with st.expander("ETL + Visualization + SQL Insert+Dashboard"):  # smaller subtitle
