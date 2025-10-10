@@ -47,7 +47,7 @@
         artifact_colors    → Color composition details linked via objectid.
 
  Author          : Prasath RK
- Version         : 0.0.1
+ Version         : 0.0.2
  Release Date    : 10-10-2025
  Dependencies    : streamlit, requests, sqlite3, pandas
  Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
@@ -60,18 +60,15 @@ import requests
 import sqlite3
 import pandas as pd
 
-# Sidebar version info
-st.sidebar.write("Version: 0.0.1")
-st.sidebar.write("Release Date: 10-10-2025")
-
 #TITLE
 st.title("🏛️ Harvard Artifacts 🏛️")
-with st.expander("ETL + Visualization + SQL Insert+Dashboard"):  # smaller subtitle
-    st.markdown("""
+#with st.expander("ETL + Visualization + SQL Insert+Dashboard"):  # smaller subtitle
+st.markdown("""
 Welcome to the **Harvard Artifacts Explorer**!  
 Fetch, visualize, and store artifact metadata like a pro.  
 🎨 See colors, 🖼️ view media, and 📊 analyze trends in your browser.
 """)
+
 st.markdown("---")
 
 
@@ -545,3 +542,11 @@ ORDER BY artifact_count DESC"""
         st.datafram(df)
     conn.close()
 
+
+
+# ===========================
+# Footer / Credits
+# ===========================
+st.markdown("---")
+st.write("© 2025 Built by Prasath Rk")
+st.write("Data Source: [Harvard Art Museums API](https://www.harvardartmuseums.org/collections/api)")
