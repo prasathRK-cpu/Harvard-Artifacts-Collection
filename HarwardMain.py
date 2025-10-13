@@ -47,7 +47,7 @@
         artifact_colors    → Color composition details linked via objectid.
 
  Author          : Prasath RK
- Version         : 0.0.4
+ Version         : 0.0.5
  Release Date    : 10-10-2025
  Dependencies    : streamlit, requests, sqlite3, pandas
  Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
@@ -60,9 +60,33 @@ import requests
 import sqlite3
 import pandas as pd
 
+#st.set_page_config(page_title="Cane Weighment Dashboard", layout="wide")
+st.set_page_config(page_title="Harvard Artifacts 🏛️", page_icon="🏛️", layout="wide", initial_sidebar_state=None,
+                    menu_items={'About':"""
+                                Author          : Prasath RK
+                                Version         : 0.0.5
+                                Release Date    : 13-10-2025
+                                Dependencies    : streamlit, requests, sqlite3, pandas
+                                Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
+                                ===================================================================="""})
+
+
 # Sidebar version info 
-st.sidebar.write("Version: 0.0.4") 
-st.sidebar.write("Release Date: 10-10-2025")
+st.sidebar.markdown(
+    """
+    <div style="text-align:left; font-size:13px;">
+        <b>🧩 Version:</b> 0.0.5<br>
+        <b>📅 Release Date:</b> 13 Oct 2025<br>
+        <span style="color:gray;">© 2025 Prasath Rk</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+
+# --- Main Page Section: Display area ---
+st.sidebar.title("🎨 Harvard Artifacts Explorer")
 
 #TITLE
 st.title("🏛️ Harvard Artifacts 🏛️")
@@ -90,7 +114,7 @@ for table in tables:
         counts.append(cursor.fetchone()[0])
 
 # Display metrics in styled cards
-with st.expander("### **Total Records in Database**"):
+with st.expander("### **Total Records in Database**",expanded=True):
     col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("📂 artifact_metadata")
@@ -103,8 +127,6 @@ with col3:
     st.metric(label="Records", value=counts[2])
 
 conn.close()
-st.divider()
-
 
 # ===========================
 # API Data Collection Section
@@ -125,6 +147,8 @@ with col3:
                                                                 "Accessories","Prints","Vessels","Textile Arts",
                                                                 "Archival Material","Fragments","Manuscripts","Seals",
                                                                 "Straus Materials","All"])
+
+
 
 # Initialize lists to store data
 metadata = []
@@ -214,27 +238,35 @@ if st.sidebar.button("**Collect Data**"):
         # Update progress bar
         progress_bar.progress(pg / end_page)
 
-    st.success(f"Data collection completed! Total records fetched: {len(all_records)}")
+        st.success(f"""
+                    ✅ Data collection completed successfully!  
+                    **Summary:**  
+                    • Metadata records: {len(metadata)}  
+                    • Media records: {len(media)}  
+                    • Color records: {len(colors)}  
+                    """
+                )
 
 import streamlit as st
 
 st.set_page_config(page_title="Harvard Artifacts ETL", layout="wide")
 
-# --- Sidebar Section: Buttons only ---
-with st.sidebar:
-    st.header("🧭 Actions")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        json_btn = st.button("JSON")
-    with col2:
-        df_btn = st.button("DataFrame")
-    with col3:
-        ins_btn = st.button("Insert into DB")
+# --- Sidebar Navigation ---
+menu = st.sidebar.radio(
+    "🧭 Actions",
+    ["Home","JSON","DataFrame",]
+)
 
-# --- Main Page Section: Display area ---
-st.title("🎨 Harvard Artifacts Explorer")
+# --- Home Page ---
+if menu == "Home":
+    st.subheader("🏠 Welcome")
+    st.write("""
+    This dashboard provides  performs a full ETL (Extract, Transform, Load) pipeline with integrated
+    data visualization and SQL-based reporting features.
+    """)
 
-if json_btn:
+
+if menu == ("JSON"):
     if (
         "json_metadata" in st.session_state and
         "json_media" in st.session_state and
@@ -258,7 +290,7 @@ if json_btn:
     else:
         st.warning("⚠️ JSON data not found in session state. Please load data first.")
 
-elif df_btn:
+if  menu == ("DataFrame"):
     if (
         "df_metadata" in st.session_state and
         "df_media" in st.session_state and
@@ -281,18 +313,12 @@ elif df_btn:
     else:
         st.warning("⚠️ DataFrames not found in session state. Please load data first.")
 
-elif ins_btn:
-    st.info("💾 Insert to Database feature coming soon!")
-
-
- 
-
 
 # ==============================
 # Insert into SQL(SQLite3)
 # ==============================
 
-if ins_btn:   #By clicking this button Data will insert to to corresponding tables
+if st.sidebar.button("Insert into DB"):   #By clicking this button Data will insert to to corresponding tables
     if "df_metadata" in st.session_state and "df_media" in st.session_state and "df_colors" in st.session_state:
         df_metadata = st.session_state["df_metadata"]
         df_media = st.session_state["df_media"]
@@ -660,6 +686,20 @@ if st.sidebar.button("Display"):
 # ===========================
 # Footer / Credits
 # ===========================
-st.markdown("---")
-st.write("© 2025 Built by Prasath Rk")
-st.write("Data Source: [Harvard Art Museums API](https://www.harvardartmuseums.org/collections/api)")
+
+# Sidebar version info 
+st.markdown(
+    """
+    <hr style="border: 0.5px solid #bbb; margin-top: 25px; margin-bottom: 10px;">
+    <div style="text-align: center; font-size: 13px; line-height: 1.6;">
+        <strong>© 2025</strong> | Built with 🌍 by <strong>Prasath Rk</strong><br>
+        <span style="color: #6c757d;">
+            Data Source: 
+            <a href="https://www.harvardartmuseums.org/collections/api" target="_blank" style="color: #0073e6; text-decoration: none;">
+                Harvard Art Museums API
+            </a>
+        </span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
