@@ -47,7 +47,7 @@
         artifact_colors    → Color composition details linked via objectid.
 
  Author          : Prasath RK
- Version         : 0.0.5
+ Version         : 0.0.6
  Release Date    : 10-10-2025
  Dependencies    : streamlit, requests, sqlite3, pandas
  Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
@@ -64,39 +64,89 @@ import pandas as pd
 st.set_page_config(page_title="Harvard Artifacts 🏛️", page_icon="🏛️", layout="wide", initial_sidebar_state=None,
                     menu_items={'About':"""
                                 Author          : Prasath RK
-                                Version         : 0.0.5
+                                Version         : 0.0.6
                                 Release Date    : 13-10-2025
                                 Dependencies    : streamlit, requests, sqlite3, pandas
                                 Contact         : https://www.linkedin.com/in/prasath-rk-552076258/
                                 ===================================================================="""})
 
 
-# Sidebar version info 
-st.sidebar.markdown(
-    """
-    <div style="text-align:left; font-size:13px;">
-        <b>🧩 Version:</b> 0.0.5<br>
-        <b>📅 Release Date:</b> 13 Oct 2025<br>
-        <span style="color:gray;">© 2025 Prasath Rk</span>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# --- Sidebar Version Info ---
+with st.sidebar:
+    col1, col2 = st.columns(2)
+with col1:
+    st.sidebar.markdown(
+        """
+        <div style="text-align:left; font-size:13px;">
+            <b>🧩 Version:</b> 0.0.5<br>
+            <b>📅 Release Date:</b> 13 Oct 2025<br>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with col2:
+    st.sidebar.success("🔑 **API Status:** Connected")
 
 
 
 # --- Main Page Section: Display area ---
-st.sidebar.title("🎨 Harvard Artifacts Explorer")
+#st.sidebar.title("🎨 Harvard Artifacts Explorer")
 
-#TITLE
-st.title("🏛️ Harvard Artifacts 🏛️")
-#with st.expander("ETL + Visualization + SQL Insert+Dashboard"):  # smaller subtitle
-st.markdown("""
-Welcome to the **Harvard Artifacts Explorer**!  
-Fetch, visualize, and store artifact metadata like a pro.  
-🎨 See colors, 🖼️ view media, and 📊 analyze trends in your browser.
-""")
+# --- TITLE SECTION ---
+col1, col2 = st.columns(2)
+
+with col1:
+    st.title("🏛️ Harvard Artifacts")
+    # Subtitle / Description
+    st.markdown("""
+    Welcome to the **Harvard Artifacts Explorer**!  
+    Fetch, visualize, and store artifact metadata like a pro.  
+    🎨 See colors, 🖼️ view media, and 📊 analyze trends in your browser.
+    """)
+
+
 st.markdown("---")
+
+# ==========================
+#Collecting Classification
+#=============================
+
+
+# --- API Setup ---
+API_KEY = "baeae4fa-903c-4cbe-bc8c-16369ea17a35"
+url = "https://api.harvardartmuseums.org/classification"
+
+# --- Fetch classification data dynamically ---
+params = {
+    "apikey": API_KEY,
+    "size": 100
+}
+
+response = requests.get(url, params=params)
+
+if response.status_code == 200:
+    data = response.json()
+    
+    # Create list with "Name (Count)" format, filtered by minimum object count
+    classifications = [
+        f"{item['name']} ({item['objectcount']})"
+        for item in data["records"]
+        if item.get("objectcount", 0) >= 2500
+    ]
+    classifications.append("All (∞)")  # Add "All" option manually
+else:
+    st.error(f"❌ Failed to fetch classifications: {response.status_code}")
+    classifications = ["All (∞)"]
+
+# --- Streamlit UI ---
+st.sidebar.title("🔍 Filter Options")
+classification = st.sidebar.selectbox("Choose Classification", classifications)
+
+# Extract classification name (without count)
+selected_class = classification.split(" (")[0] if "(" in classification else classification
+
+
 
 # ===========================
 # Database Metrics Section
@@ -114,7 +164,7 @@ for table in tables:
         counts.append(cursor.fetchone()[0])
 
 # Display metrics in styled cards
-with st.expander("### **Total Records in Database**",expanded=True):
+with st.expander("### **📊 Current Database:**",expanded=True):
     col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown("📂 artifact_metadata")
@@ -127,6 +177,7 @@ with col3:
     st.metric(label="Records", value=counts[2])
 
 conn.close()
+
 
 # ===========================
 # API Data Collection Section
@@ -141,12 +192,6 @@ with col1:
     min_page=st.number_input("start page", min_value=1, value=1, step=1)
 with col2:
     max_pages=st.number_input("End page", min_value=1, value=1, step=1) 
-with col3:
-    #classification = st.sidebar.text_input("Choose Classification")
-    classification =st.selectbox("Choose Classification", ["Coins","Paintings","Sculptures","Furniture","Drawings",
-                                                                "Accessories","Prints","Vessels","Textile Arts",
-                                                                "Archival Material","Fragments","Manuscripts","Seals",
-                                                                "Straus Materials","All"])
 
 
 
@@ -170,6 +215,8 @@ if st.sidebar.button("**Collect Data**"):
         }
         if classification.strip() != "" and classification != "All":
             params["classification"] = classification
+            st.write(f"**Selected Classification:** {selected_class}")
+
 
         with st.spinner(f"Fetching data for page {pg}..."):
             response = requests.get(url, params=params)
@@ -231,6 +278,8 @@ if st.sidebar.button("**Collect Data**"):
 
 
 
+
+
         else:
             st.error(f"Error fetching page {pg}: {response.status_code}")
             break
@@ -238,14 +287,14 @@ if st.sidebar.button("**Collect Data**"):
         # Update progress bar
         progress_bar.progress(pg / end_page)
 
-        st.success(f"""
-                    ✅ Data collection completed successfully!  
-                    **Summary:**  
-                    • Metadata records: {len(metadata)}  
-                    • Media records: {len(media)}  
-                    • Color records: {len(colors)}  
-                    """
-                )
+    st.success(f"""
+        ✅ Data collection completed successfully!  
+        **Summary:**  
+        • Metadata records: {len(metadata)}  
+        • Media records: {len(media)}  
+        • Color records: {len(colors)}  
+        """
+    )
 
 import streamlit as st
 
